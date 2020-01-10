@@ -15,9 +15,9 @@
                     console.log(leiturasValores[index]);
                 })
             }
-        }); */
-
-        function getData(){
+        }); 
+        
+         function getData(){
             $.getJSON( "http://localhost/rest/api/leituras/read.php", function( data ) {
             
                 Highcharts.each(data, function(leitura){
@@ -30,7 +30,26 @@
                 });
                   chart.series[0].setData(chartData);
             });
-        }
+        } */
+
+    var api_url = "http://localhost/rest/api/leituras/read.php";
+
+    async function getData() {
+        const response = await fetch(api_url);
+        const leituras = await response.json();
+        console.log(leituras);
+
+        /* Highcharts.each(leituras, function(leitura) {
+            leitura.x = new Date(leitura.data_criada).getTime();
+            leitura.y = Number(leitura.valor);
+            chartData.push(leitura);
+        });
+        chartData.sort(function(a, b) {
+            return a.x - b.x
+        });
+        //$("#periodoInicial")
+        chart.series[0].setData(chartData); */
+    }
 
         var chart = Highcharts.chart('container', {
             chart: {type: 'spline'},
@@ -39,7 +58,7 @@
             },
         
             subtitle: {
-                text: 'Source: thesolarfoundation.com'
+                text: 'Source: SmartControl API'
             },
         
             yAxis: {
@@ -99,6 +118,7 @@
         });
 
         getData();
+
     });
 
     
