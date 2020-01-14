@@ -1,5 +1,8 @@
 <?php
 
+session_start();
+
+if(isset($_SESSION[sha1('dadosLogin')])){
 
 ?>
 
@@ -37,8 +40,8 @@
     $(function() {
 
         var chartData = new Array();
-        var periodoInicial = "";
-        var periodoFinal = "";
+        var dataInicial = '';
+        var dataFinal = '';
 
         /* $.ajax({
             type: 'GET',
@@ -69,16 +72,26 @@
             });
         } */
 
-        var api_url = "http://localhost/rest/api/leituras/read.php";
+        // Pega dados da api_url utilizando função async, o async function espera o promise terminar
+        // utilizando o prefixo await, esperando o json ser retornado, caso o promise não seja cumprida
+        // nada é retornado
 
         async function getData() {
+            if (dataInicial === '' && dataFinal === '') {
+                var api_url = "http://localhost/rest/api/leituras/read.php";
+
+            } else {
+                var api_url = 'http://localhost/rest/api/leituras/read.php?dataInicial=' + 
+                dataInicial + '&dataFinal=' + dataFinal;
+            }
+
             const response = await fetch(api_url);
             const leituras = await response.json();
-            $("#periodoInicialAPI").html($.format.date(leituras[0].hora, "HH:mm:ss"));
-            $("#periodoFinalAPI").html($.format.date(leituras[leituras.length-1].hora, "HH:mm:ss"));
-            $("#diaAPI").html($.format.date(leituras[leituras.length-1].data + " " + leituras[leituras.length-1].hora, "dd/MM/yyyy"));
+            
+            // Insere dados no HighCharts para cada leitura encontrada
             Highcharts.each(leituras, function(leitura) {
-                leitura.x = new Date(leitura.data + " " + leitura.hora).getTime();
+                leitura.x = new Date(leitura.data + " " + leitura.hora);
+                console.log(leitura.x);
                 leitura.y = Number(leitura.valor);
                 chartData.push(leitura);
             });
@@ -86,6 +99,10 @@
                 return a.x - b.x
             });
             chart.series[0].setData(chartData);
+            $("#periodoInicialAPI").html($.format.date(leituras[0].hora, "HH:mm:ss"));
+            $("#periodoFinalAPI").html($.format.date(leituras[leituras.length - 1].hora, "HH:mm:ss"));
+            $("#diaAPI").html($.format.date(leituras[leituras.length - 1].data + " " + leituras[leituras
+                .length - 1].hora, "dd/MM/yyyy"));
         }
 
         var chart = Highcharts.chart('graficoLeituras', {
@@ -131,7 +148,7 @@
                 }
             },
 
-            series:  [{
+            series: [{
                 name: 'Valores de leitura',
                 data: []
             }],
@@ -153,11 +170,12 @@
 
         });
 
+        
         getData();
 
     });
     </script>
-    
+
     <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
         <a class="navbar-brand" href="#">SmartControlPRO</a>
         <button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#collapsibleNavId"
@@ -184,17 +202,22 @@
     </nav>
     <div class="container">
         <div class="row">
+            <div class="col-4 text-left mt-2">
+                <h3>Bem vindo, <?php echo($_SESSION[sha1('dadosLogin')]['pes_nome']);?>!</h3>
+            </div>
+        </div>
+        <div class="row">
             <div class="col-12 text-center">
                 <h3 class="mt-4">Leitura diária da rede XXX</h1>
-                     <small>Ultimos dados sincronizados do dia <span id="diaAPI"></span><br>
-                de <span id="periodoInicialAPI"></span> até <span id="periodoFinalAPI"></span>
-                </small>
+                    <small>Ultimos dados sincronizados do dia <span id="diaAPI"></span><br>
+                        de <span id="periodoInicialAPI"></span> até <span id="periodoFinalAPI"></span>
+                    </small>
             </div>
         </div>
         <figure class="highcharts-figure">
             <div id="graficoLeituras"></div>
             <p class="highcharts-description">
-                
+
             </p>
         </figure>
         <div class="row">
@@ -225,12 +248,11 @@
 
                                 <div class="form-group my-2">
                                     <label for="">Período final: </label>
-                                    <input type="date" class="form-control" name="dataFinal" id="" aria-describedby="helpId"
-                                        placeholder="">
-
+                                    <input type="date" class="form-control" name="dataFinal" id=""
+                                        aria-describedby="helpId" placeholder="">
                                 </div>
                             </div>
-                        
+
                     </div>
                     <div class="modal-footer">
                         <input type="reset" class="btn btn-secondary" value="Limpar campos"></input>
@@ -243,5 +265,11 @@
     </div>
 
 </body>
+<?php
+}else{
+    echo "Erro no login!";
+    print_r($_SESSION['dadosLogin']);
 
+}
+?>
 </html>
